@@ -16,6 +16,8 @@ struct res {
 spinlock_t lock;
 struct list_head pool;
 struct llist_head lpool;
+const int N = 100000;
+struct res res_pool[100000+1];
 
 #define DEF_ALLOC(name, pre, post, empty, first, del) \
 void *alloc_##name(void) \
@@ -31,7 +33,6 @@ void *alloc_##name(void) \
 	del; \
 	post; \
 	r = res->ptr; \
-	kfree(res); \
 	return r; \
 }
 
@@ -60,7 +61,7 @@ void free_##name(void *a) \
 	struct res *res; \
 	if (a == NULL) return; \
 	pre; \
-	res = kmalloc(sizeof(struct res), GFP_KERNEL); \
+	res = &res_pool[(u64)a]; \
 	res->ptr = a; \
 	add; \
 	post; \
@@ -81,13 +82,13 @@ void test(void *(*_alloc)(void), void (*_free)(void *), const char *prompt)
 {
 	struct timespec start;
 	struct timespec end;
-	const int N = 100000;
 	u64 alloc_nsec = 0;
 	u64 free_nsec = 0;
 	u64 i;
 
 	spin_lock_init(&lock);
 	INIT_LIST_HEAD(&pool);
+	init_llist_head(&lpool);
 	for (i = 0; i < N; ++i) {
 		_free((void *)i + 1);
 	}
