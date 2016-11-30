@@ -115,6 +115,8 @@ void test(void *(*_alloc)(void), void (*_free)(void *), const char *prompt)
 int __init hello_init(void)
 {
 	pr_info("Hello World!\n");
+	pr_info("==========> struct size <===========\n");
+	pr_info("sizeof(spinlock_t) = %lu\n", sizeof(spinlock_t));
 	test(alloc_vanilla, free_vanilla, "vanilla");
 	test(alloc_vanilla, free_vanilla, "vanilla");
 	test(alloc_vanilla, free_vanilla, "vanilla");
