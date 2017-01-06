@@ -16,23 +16,11 @@ static inline u64 rdtscp(void)
 	return msr;
 }
 
-static inline void sfence(void)
-{
-	asm volatile("sfence");
-}
-static inline void mfence(void)
-{
-	asm volatile("mfence");
-}
-static inline void lfence(void)
-{
-	asm volatile("lfence");
-}
+#define sfence asm volatile("sfence":::"memory")
+#define mfence asm volatile("mfence":::"memory")
+#define lfence asm volatile("lfence":::"memory")
 
-static inline void clflush(volatile void *p)
-{
-	asm volatile("clflush %0" : "+m"(*(volatile char *)p));
-}
+#define clflush(p) asm volatile("clflush %0" : "+m"(*(volatile char *)p))
 
 u64 a[1010101];
 
@@ -52,7 +40,7 @@ int main()
 		for (i = 0; i < 16; ++i) \
 			a[i] = i; \
 		s = 0; \
-		mfence(); \
+		mfence; \
 		/* Start the test */ \
 		t1 = rdtscp(); \
 		for (i = 0; i < 16; ++i) \
@@ -76,7 +64,7 @@ int main()
 		for (i = 0; i < 16; ++i) \
 			a[i] = i; \
 		s = 0; \
-		mfence(); \
+		mfence; \
 		/* Start the test */ \
 		t1 = rdtscp(); \
 		pre; \
