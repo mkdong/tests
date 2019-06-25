@@ -170,7 +170,7 @@ void test_rand_load(char *a, const char *tag)
 		count++;
 	}
 
-	printf("[%s] seq load miss latency: %llu "MEASURE_UNIT
+	printf("[%s] rand load miss latency: %llu "MEASURE_UNIT
 	       ", count=%lld, avg=%llu "MEASURE_UNIT", chksum=0x%lx\n",
 	       tag, sum, count, sum / count, chksum);
 }
