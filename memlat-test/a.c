@@ -18,12 +18,14 @@ char *pmm;
 
 int measure_lat(void)
 {
+	_mm_mfence();
 	u64 t1 = measure();
 	u64 t2 = measure();
+	_mm_mfence();
 	printf(" empty measurement = %llu "MEASURE_UNIT"\n", t2 - t1);
 }
 
-int test_load_miss(char *a)
+int test_load_miss(char *a, const char *tag)
 {
 	register int value = 0;
 	for (int i = 0; i < A_LEN; ++i)
@@ -32,16 +34,18 @@ int test_load_miss(char *a)
 	for (int i = 0; i < A_LEN; ++i)
 		_mm_clflush(&a[i]);
 
+	_mm_mfence();
 	u64 t1 = measure();
 	value = a[2];
 	u64 t2 = measure();
+	_mm_mfence();
 
-	printf(" load miss latency: %llu "MEASURE_UNIT", value = %d\n",
-	       t2 - t1, value);
+	printf("[%s] load miss latency: %llu "MEASURE_UNIT", value = %d\n",
+	       tag, t2 - t1, value);
 }
 
 const char *TEST_FILE = "/tmp/testfile";
-const char *PMM_FILE = "/mnt/xxx/testfile";
+const char *PMM_FILE = "/mnt/mem/testfile";
 
 void prepare(void)
 {
@@ -67,14 +71,20 @@ int main()
 	measure_lat();
 	measure_lat();
 	measure_lat();
+	puts("-");
 	prepare();
-	test_load_miss(ram);
+	test_load_miss(ram, "ram 0.");
+	test_load_miss(ram, "ram 1.");
+	test_load_miss(ram, "ram 2.");
+	test_load_miss(ram, "ram 3.");
+	test_load_miss(ram, "ram 4.");
+	puts("-");
 	sleep(1);
-	test_load_miss(pmm);
-	sleep(1);
-	test_load_miss(ram);
-	sleep(1);
-	test_load_miss(pmm);
+	test_load_miss(pmm, "pmm 0.");
+	test_load_miss(pmm, "pmm 1.");
+	test_load_miss(pmm, "pmm 2.");
+	test_load_miss(pmm, "pmm 3.");
+	test_load_miss(pmm, "pmm 4.");
 
 	return 0;
 }
