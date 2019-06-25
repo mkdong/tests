@@ -1,5 +1,4 @@
 #include "../common.h"
-#include <x86intrin.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -9,20 +8,20 @@
 
 #define A_LEN (4096)
 
+
+#define measure realtime
+#define MEASURE_UNIT "ns"
 char *ram;
 char *pmm;
 
-#define fatal_errno(err,s)                                         \
-do {                                                               \
-	fprintf(stderr, "failed mmap ram: %s\n", strerror(err));   \
-	exit(-1);                                                  \
-} while (0)
 
-#define fatal(s)                                                   \
-do {                                                               \
-	perror("failed mmap ram");                                 \
-	exit(-1);                                                  \
-} while (0)
+
+int measure_lat(void)
+{
+	u64 t1 = measure();
+	u64 t2 = measure();
+	printf(" empty measurement = %llu "MEASURE_UNIT"\n", t2 - t1);
+}
 
 int test_load_miss(char *a)
 {
@@ -33,11 +32,11 @@ int test_load_miss(char *a)
 	for (int i = 0; i < A_LEN; ++i)
 		_mm_clflush(&a[i]);
 
-	u64 t1 = rdtscp();
+	u64 t1 = measure();
 	value = a[2];
-	u64 t2 = rdtscp();
+	u64 t2 = measure();
 
-	printf(" load miss latency: %llu ticks, value = %d\n",
+	printf(" load miss latency: %llu "MEASURE_UNIT", value = %d\n",
 	       t2 - t1, value);
 }
 
@@ -64,6 +63,10 @@ void prepare(void)
 
 int main()
 {
+	measure_lat();
+	measure_lat();
+	measure_lat();
+	measure_lat();
 	prepare();
 	test_load_miss(ram);
 	sleep(1);
